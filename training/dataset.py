@@ -33,8 +33,8 @@ class TFRecordDataset:
         self.resolution         = None
         self.resolution_log2    = None
         self.shape              = []        # [channels, height, width]
-        self.dtype              = 'uint8'
-        self.dynamic_range      = [0, 255]
+        self.dtype              = 'uint16'
+        self.dynamic_range      = [0, 65535]
         self.label_file         = label_file
         self.label_size         = None      # components
         self.label_dtype        = None
@@ -163,7 +163,7 @@ class TFRecordDataset:
         features = tf.parse_single_example(record, features={
             'shape': tf.FixedLenFeature([3], tf.int64),
             'data': tf.FixedLenFeature([], tf.string)})
-        data = tf.decode_raw(features['data'], tf.uint8)
+        data = tf.decode_raw(features['data'], tf.uint16)
         return tf.reshape(data, features['shape'])
 
     # Parse individual image from a tfrecords file into NumPy array.
@@ -173,7 +173,7 @@ class TFRecordDataset:
         ex.ParseFromString(record)
         shape = ex.features.feature['shape'].int64_list.value # pylint: disable=no-member
         data = ex.features.feature['data'].bytes_list.value[0] # pylint: disable=no-member
-        return np.fromstring(data, np.uint8).reshape(shape)
+        return np.fromstring(data, np.uint16).reshape(shape)
 
 #----------------------------------------------------------------------------
 # Helper func for constructing a dataset object using the given options.

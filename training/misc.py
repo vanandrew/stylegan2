@@ -65,10 +65,15 @@ def convert_to_pil_image(image, drange=[0,1]):
         else:
             image = image.transpose(1, 2, 0) # CHW -> HWC
 
-    image = adjust_dynamic_range(image, drange, [0,255])
-    image = np.rint(image).clip(0, 255).astype(np.uint8)
-    fmt = 'RGB' if image.ndim == 3 else 'L'
-    return PIL.Image.fromarray(image, fmt)
+    image = adjust_dynamic_range(image, drange, [0,65535])
+    image = np.rint(image).clip(0, 65535).astype(np.uint16)
+    #fmt = 'RGB' if image.ndim == 3 else 'L'
+    #return PIL.Image.fromarray(image, fmt)
+
+    # Custom code for saving in 16 bit
+    img = PIL.Image.new("I",image.T.shape)          # <-- this will change if you use
+    img.frombytes(image.tobytes(),'raw',"I;16")     # <-- a different data type
+    return img
 
 def save_image_grid(images, filename, drange=[0,1], grid_size=None):
     convert_to_pil_image(create_image_grid(images, grid_size), drange).save(filename)

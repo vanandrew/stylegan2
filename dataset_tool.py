@@ -515,15 +515,23 @@ def create_from_images(tfrecord_dir, image_dir, shuffle):
     if channels not in [1, 3]:
         error('Input images must be stored as RGB or grayscale')
 
+    labels = list() # get labels
     with TFRecordExporter(tfrecord_dir, len(image_filenames)) as tfr:
         order = tfr.choose_shuffled_order() if shuffle else np.arange(len(image_filenames))
         for idx in range(order.size):
             img = np.asarray(PIL.Image.open(image_filenames[order[idx]]))
+            filename = image_filenames[order[idx]]
+            if 'T1w' in filename:
+                labels.append([1,0])
+            else:
+                labels.append([0,1])
             if channels == 1:
                 img = img[np.newaxis, :, :] # HW => CHW
             else:
                 img = img.transpose([2, 0, 1]) # HWC => CHW
             tfr.add_image(img)
+        labels = np.array(labels)
+        tfr.add_labels(labels)
 
 #----------------------------------------------------------------------------
 
